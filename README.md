@@ -1,99 +1,74 @@
 # luci-graphic-smstool
-LuCI Graphic SMS Tool: send and receive SMS from a USB modem (e.g. ZTE) via the OpenWrt web UI. Inbox, contacts, setup wizard (AT port, country prefix, SIM/ME storage), USSD and modem reset.
 
-# luci-graphic-smstool
+LuCI Graphic SMS Tool: send and receive SMS from a USB modem (e.g. ZTE) via the OpenWrt web UI. Inbox, contacts, setup wizard (AT port, country prefix, SIM/ME storage), USSD and modem reset.
 
 **LuCI Graphic SMS Tool** — send and receive SMS from a USB 3G/4G/5G modem (e.g. ZTE) through the OpenWrt web interface.
 
-| OpenWrt | Package |
-|---------|---------|
-| **24.x** | `.ipk` (`opkg`) |
-| **25.x** | `.apk` (`apk`) |
+| OpenWrt | Package | Extra dependencies |
+|---------|---------|--------------------|
+| **24.x** | `.ipk` (`opkg`) | `luci-lua-runtime`, `luci-compat`, `sms-tool` |
+| **25.x** | `.apk` (`apk`) | `sms-tool` |
 
 **Version:** 1.0.0  
-**Depends:** `luci-base`, `sms-tool`
 
----
-
-## What it does
-
-Adds **Services → Graphic SMS Tool** in LuCI:
-
-- **First-run wizard** (5 steps): AT port, country prefix, SMS storage
-- **Inbox** — receive, read, delete SMS
-- **New SMS** — compose and send
-- **Contacts** — address book (name, number, note)
-- **USSD** — run codes such as `*123#`
-- **Reset modem**
-- Storage: SIM (**SM**), modem memory (**ME**) or both
-
-Backend: `/usr/bin/sms_tool` (AT commands on the selected `/dev/ttyUSB*` port).
-
-Web path: `/cgi-bin/luci/admin/services/luci_graphic_smstool/inbox`
-
----
+LuCI files are the same on 24 and 25 (`PKGARCH:=all`). OpenWrt 24 does **not** ship a Lua runtime with LuCI by default, so this Lua app needs extra packages.
 
 ## Screenshots
 
-### 1. Setup wizard — Welcome
+### Setup wizard — Welcome
+First-run setup. Configures the modem once (step 1 of 5).
 
-First-run setup. Configures the modem once (5 steps).
+![Setup wizard — Welcome](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot.png?raw=true)
 
-![Setup welcome](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot.png?raw=true)
+### Setup wizard — Modem port
+Choose the AT port (`/dev/ttyUSB0`, `ttyUSB1`, `ttyUSB2`), auto-detect or test the selected port.
 
-### 2. Setup wizard — Modem port
+![Setup wizard — Modem port](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot2.png?raw=true)
 
-Choose the AT command port (`/dev/ttyUSB0`, `ttyUSB1`, `ttyUSB2`), **Auto-Detect Working Port**, **Refresh List** or **Test Selected Port**.
+### Setup wizard — Country prefix
+Default country prefix (e.g. `39` for Italy). Example: `3331234567` → `393331234567`.
 
-![Modem port](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot2.png?raw=true)
+![Setup wizard — Country prefix](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot3.png?raw=true)
 
-### 3. Setup wizard — Country prefix
+### Setup wizard — SMS storage
+Where SMS are stored: SIM (SM), modem memory (ME) or both.
 
-Default country prefix (e.g. `39` for Italy).  
-Example: `3331234567` → `393331234567`.
+![Setup wizard — SMS storage](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot4.png?raw=true)
 
-![Country prefix](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot3.png?raw=true)
+### Setup wizard — Finish
+Summary of port, prefix and storage, then Finish Setup.
 
-### 4. Setup wizard — SMS storage
+![Setup wizard — Finish](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot5.png?raw=true)
 
-Where SMS are stored: **SIM (SM)**, **Modem (ME)** or **Both**.
+### Inbox — Received SMS
+Received messages (From, Number, Date, Message). New SMS, Receive SMS, Contacts, Settings, Reset Modem.
 
-![SMS storage](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot4.png?raw=true)
-
-### 5. Setup wizard — Finish
-
-Summary of port, prefix and storage, then **Finish Setup**.
-
-![Finish setup](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot5.png?raw=true)
-
-### 6. Inbox
-
-Received SMS (From, Number, Date, Message, Actions).
-
-Buttons: **New SMS**, **Receive SMS**, **Contacts**, **Settings**, **Reset Modem**, **Refresh**, **Delete All**.
-
-![Inbox](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot6.png?raw=true)
-
-Also in the UI (same app):
-
-- **Contacts** — add name, phone (`3331234567` or `+393331234567`), optional note; search the address book
-- **Settings** — modem port, country prefix, SMS storage, USSD (`*123#`)
+![Inbox — Received SMS](https://github.com/ilblogdicristiangallo/luci-graphic-smstool/blob/main/Screenshot/Screenshot6.png?raw=true)
 
 ---
 
-## Install
+## Dependencies
 
-Copy the package to the router (`/tmp`), then:
+### All versions
 
-### OpenWrt 24 (IPK)
-<pre>
-opkg update
-  
-opkg install sms-tool
-  
-opkg install /tmp/luci-graphic-smstool_1.0.0-1_all.ipk</pre>
+- `luci-base`
+- `sms-tool` (`/usr/bin/sms_tool`)
 
-### OpenWrt 25 (APK)
+### OpenWrt 24.x only (required)
+
+Without these, LuCI shows **Runtime exception: No Lua runtime installed**.
+
+| Package | Why |
+|---------|-----|
+| **`luci-lua-runtime`** | Lua interpreter + LuCI Lua libraries (**mandatory**) |
+| **`luci-compat`** | Lua controller / menu compatibility |
+
+# Install OpenWrt 24
+<pre>opkg update
+opkg install luci-lua-runtime luci-compat sms-tool</pre>
+
+# Install OpenWrt 25
+
 <pre>
   apk update
   
